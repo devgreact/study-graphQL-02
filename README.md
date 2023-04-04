@@ -94,3 +94,96 @@ query {
   }
 }
 ```
+
+# 이론 공부
+
+## Apollo GraphQL
+
+- GraphQL은 명세, 즉 형식일 뿐
+- GrpahQL 구현할 솔루션 필요
+
+  - 백엔드에서 정보를 제공 및 처리
+  - 프론트엔드에서 요청 전송
+  - GraphQL.js, GraphQL Yoga, AWS Amplify, Relay ...
+  - [기타솔루션](https://graphql.org/code/)
+
+- 백엔드와 프론트엔드 모두 제공
+- 간편하고 쉬운 설정
+- 풍성한 기능들 제공
+- Apollo Server 를 활용한 백엔드 서버 제작
+- Apollo Client 와 React를 활용한 프론트엔드 웹 제작
+
+## Apollo Server 제작
+
+- 필요 모듈 설치
+
+```
+npm i graphql apollo-server
+```
+
+- 아폴로 서버 실행
+
+```js
+const database = require("./database");
+const { ApolloServer, gql } = require("apollo-server");
+const typeDefs = gql`
+  type Query {
+    teams: [Team]
+  }
+  type Team {
+    id: Int
+    manager: String
+    office: String
+    extension_number: String
+    mascot: String
+    cleaning_duty: String
+    project: String
+  }
+`;
+const resolvers = {
+  Query: {
+    teams: () => database.teams,
+  },
+};
+
+// typeDef 와 resolver 를 인자로 받아 서버 생성
+/* 
+  typeDef 
+  : GraphQL 명세에서 사용될 데이터, 요청의 타입 지정
+  : gql(template literal tag) 로 생성됨
+
+  resolver
+  : 서비스의 액션들을 함수로 지정
+  : 요청에 따라 데이터를 반환, 입력, 수정, 삭제
+*/
+const server = new ApolloServer({ typeDefs, resolvers });
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+
+- 서버 실행
+
+```
+npm start
+```
+
+- 쿼리 테스트
+
+```
+query {
+  teams {
+    id
+    manager
+    office
+    extension_number
+    mascot
+    cleaning_duty
+    project
+  }
+}
+```
+
+- GraphQL Playground
+  - 작성한 GraphQL type, resolver 명세 확인
+  - 데이터 요청 및 전송 테스트
