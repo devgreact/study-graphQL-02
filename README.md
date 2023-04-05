@@ -1,21 +1,102 @@
-# GraphQL
-- 필요한 정보들만 선택하여 받아올 수 있음(Overfetching 문제 해결/데이터 전송량 감소)
-- 여러 계층의 정보들을 한 번에 받아올 수 있음.(Underfetching 문제 해결/요청 횟수 감소)
-- 하나의 endpoint 에서 모든 요청을 처리(하나의 URI에서 POST 로 모든 요청 가능)
+# Apollo Server 제작
+- 필요 모듈 설치
 
-## Apollo GraphQL(https://www.apollographql.com/)
-- GraphQL 로 서비스를 만들려면 Server 와 Client 가 필요
-- GraphQL은 명세, 즉 형식일 뿐
-- GrpahQL 구현할 솔루션 필요
-  - 백엔드에서 정보를 제공 및 처리
-  - 프론트엔드에서 요청 전송
-  - GraphQL.js, GraphQL Yoga, AWS Amplify, Relay ...
-  - [기타솔루션](https://graphql.org/code/)
+## Node.js 프로젝트 생성
 
-- 백엔드와 프론트엔드 모두 제공
-- 간편하고 쉬운 설정
-- 풍성한 기능들 제공
+npm init
 
-## 실습해 볼 내용
-- Apollo Server 를 활용한 백엔드 서버 제작
-- Apollo Client 와 React를 활용한 프론트엔드 웹 제작
+## index.js 실행파일 생성
+
+```js
+  console.log("hello);
+```
+```
+node index.js 실행 확인
+```
+
+## package.json - "scripts" 항목 생성
+
+"start": "nodemon index.js"
+
+## expres 서버 설치
+npm i express
+
+## nodemon 설치 (코드가 바뀔 때마다 어플리케이션 재실행)
+
+npm install -g nodemon
+
+## csv json 모듈 설치
+
+npm i convert-csv-to-json
+
+## Apollo Server 모듈 설치
+
+npm i graphql apollo-server
+
+## 프로젝트 실행 명령어 (해당 프로젝트 폴더에서)
+
+npm start
+
+## 브라우저에서 localhost:4000 으로 확인
+
+# 2. Mock Data 제작
+
+## data 폴더 생성 / todo.csv 
+- 'Edit csv' Extension 설치
+
+```csv
+id,title,completed,date,weather
+1,공부중입니다.,false,2023-04-01,1
+2,리액트공부,false,2023-04-02,2
+3,html 공부,true,2023-04-03,2
+4,css 공부,true,2023-04-04,3
+5,js 공부,false,2023-04-05,3
+6,git공부,true,2023-04-06,5
+7,서버공부,true,2023-04-07,4
+```
+
+## index.js
+
+```js
+const database = require("./database");
+console.log(database)
+```
+- 결과 확인 후 다음 코드를 넣어줌.
+```js
+const database = require("./database");
+const { ApolloServer, gql } = require("apollo-server");
+const typeDefs = gql`
+  type Query {
+    todos: [Todo]
+  }
+  type Todo {
+    id: Int
+    title: String
+    date: String
+    complete: Boolean
+    weather: Int
+  }
+`;
+const resolvers = {
+  Query: {
+    todos: () => database.todos,
+  },
+};
+const server = new ApolloServer({ typeDefs, resolvers });
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+- 서버 실행 후 기본 query 입력해 봄.
+
+```
+query {
+  todos {
+    id
+    title
+    date
+    complete
+    weather
+  }
+}
+```
