@@ -1,63 +1,34 @@
-# Query 구현하기
+# Mutation 구현하기
+## 1. 데이터 삭제하기
+### Mutaion 삭제 루트 타입
 
-## Query Root Type
-- 자료요청에 사용될 쿼리들을 정의
-- 쿼리 명령문마다 반환될 데이터 형태를 지정
-- todos 라는 쿼리가 전송되면 [] 형태에 Todo 가 여러개가 온다.
-```
-type Query {
-  todos: [Todo]
-}
-```
+ ```js
 
-## Type 살펴보기
-- 반환될 데이터의 형태를 지정
-- 자료형을 가진 필드로 구성
-
-```js
- type Todo {
-    id: Int
-    title: String
-    date: String
-    complete: Boolean
-    weather: Int
+  type Mutation {
+    deleteTodo(id:Int): Todo
   }
-  ```
+ ```
+ - String 인자 id 를 받는 deleteTodo: 삭제된 todo를 반환
 
-  ## Resolver 살펴보기
-  - Query 란 object의 항목들로 데이터를 반환하는 함수 선언
-  - 실제 프로젝트에서는 MySql 조회 코드 등..
-  ```js
-  const resolvers = {
-    Query: {
-      todos: () => database.todos,
-    },
-  };
-```
-
-# database 의 타입 파악
+### 삭제 resolver
 
 ```js
-const database = require("./database");
-console.log(database.todos);
-``
-- 위 실행 결과로 json 확인
-- 위의 결과를 바탕으로 Todo 타입이 만들어짐.
-
-- 크롬 테스트에서 아래처럼 확인 가능함.
-```js
-query {
-  todos {
-    id
-    title
-    date
-    complete
-    weather
-  }
-}
+Mutation: {
+    deleteTodo: (parent, args, context, info) => {
+        const deleted = database.todos
+            .filter((item) => {
+                return item.id === args.id
+            })[0]
+        database.todos = database.todos
+            .filter((item) => {
+                return item.id !== args.id
+            })
+        return deleted
+    }
 ```
 
-## 특정 todo 만 받아오기
+
+index.js
 ```js
 const database = require("./database");
 // console.log(database.todos);
@@ -66,16 +37,14 @@ const { ApolloServer, gql } = require("apollo-server");
 const typeDefs = gql`
   type Query {
     todos: [Todo]
-
-
-
-// 추가쿼리
-todo(id: Int): Todo
-
-
-
-    
+    todo(id: Int): Todo    
   }
+
+  type Mutation {
+    deleteTodo(id:Int): Todo
+  }
+
+  
   type Todo {
     id: Int
     title: String
@@ -86,25 +55,276 @@ todo(id: Int): Todo
 `;
 const resolvers = {
   Query: {
-    todos: () => database.todos,
-    //  추가코드
+    todos: () => database.todos,    
     todo: (parent, args, context, info) => database.todos
         .filter((team) => {
             return team.id === args.id
         })[0],
-
   },
+  Mutation: {
+    deleteTodo: (parent, args, context, info) => {
+        const deleted = database.todos
+            .filter((item) => {
+                return item.id === args.id
+            })[0]
+        database.todos = database.todos
+            .filter((item) => {
+                return item.id !== args.id
+            })
+        return deleted
+    }
+}
 };
 const server = new ApolloServer({ typeDefs, resolvers });
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 ```
-- 크롬에서 실행
-```
-query {
-  todo(id: 1) {
+
+위처럼 작성하고 실행해본다.
+
+```js
+mutation {
+  deleteTodo(id: 1) {
     id
   }
 }
+
+
+guery {
+  todos {
+    id
+  }
+}
+```
+## 2. 데이터 추가하기
+### Mutaion 추가 루트 타입
+```js
+addTodo(
+        id: Int
+        title: String
+        date: String
+        complete: Boolean
+        weather: Int
+    ): Todo
+```
+
+### 추가 resolver
+```js
+addTodo: (parent, args, context, info) => {
+      database.todos.push(args)
+      return args
+    },
+```
+
+index.js
+```js
+const database = require("./database");
+// console.log(database.todos);
+
+const { ApolloServer, gql } = require("apollo-server");
+const typeDefs = gql`
+  type Query {
+    todos: [Todo]
+    todo(id: Int): Todo    
+  }
+
+  type Mutation {
+    deleteTodo(id:Int): Todo
+
+    addTodo(
+        id: Int
+        title: String
+        date: String
+        complete: Boolean
+        weather: Int
+    ): Todo
+
+  }
+
+
+  type Todo {
+    id: Int
+    title: String
+    date: String
+    complete: Boolean
+    weather: Int
+  }
+`;
+const resolvers = {
+  Query: {
+    todos: () => database.todos,    
+    todo: (parent, args, context, info) => database.todos
+        .filter((team) => {
+            return team.id === args.id
+        })[0],
+  },
+  Mutation: {
+    deleteTodo: (parent, args, context, info) => {
+        const deleted = database.todos
+            .filter((item) => {
+                return item.id === args.id
+            })[0]
+        database.todos = database.todos
+            .filter((item) => {
+                return item.id !== args.id
+            })
+        return deleted
+    },
+    addTodo: (parent, args, context, info) => {
+      database.todos.push(args)
+      return args
+    },
+  }
+};
+const server = new ApolloServer({ typeDefs, resolvers });
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+위 문장을 작성후 테스트
+```js
+mutation {
+  addTodo (
+    id: 100,
+      title: "추가",
+      date: "2023-04-06",
+      complete: true,
+      weather: 5
+  ) {
+    id
+    title
+    date
+    complete
+    weather
+  }
+}
+```
+
+## 3. 데이터 수정하기
+### Mutaion 추가 루트 타입
+```js
+updateTodo(
+        id: Int
+        title: String
+        date: String
+        complete: Boolean
+        weather: Int
+    ): Todo
+```
+
+### 추가 resolver
+```js
+updateTodo: (parent, args, context, info) => {
+        return database.todos.filter((item) => {
+            return item.id === args.id
+        }).map((item) => {
+            Object.assign(item, args)
+            return item
+        })[0]
+    },
+```
+
+index.js
+```js
+const database = require("./database");
+// console.log(database.todos);
+
+const { ApolloServer, gql } = require("apollo-server");
+const typeDefs = gql`
+  type Query {
+    todos: [Todo]
+    todo(id: Int): Todo    
+  }
+
+  type Mutation {
+
+    deleteTodo(id:Int): Todo
+
+    addTodo(
+        id: Int
+        title: String
+        date: String
+        complete: Boolean
+        weather: Int
+    ): Todo
+
+    
+    updateTodo(
+        id: Int
+        title: String
+        date: String
+        complete: Boolean
+        weather: Int
+    ): Todo
+
+  }
+
+
+  type Todo {
+    id: Int
+    title: String
+    date: String
+    complete: Boolean
+    weather: Int
+  }
+`;
+const resolvers = {
+  Query: {
+    todos: () => database.todos,    
+    todo: (parent, args, context, info) => database.todos
+        .filter((team) => {
+            return team.id === args.id
+        })[0],
+  },
+  Mutation: {
+    deleteTodo: (parent, args, context, info) => {
+        const deleted = database.todos
+            .filter((item) => {
+                return item.id === args.id
+            })[0]
+        database.todos = database.todos
+            .filter((item) => {
+                return item.id !== args.id
+            })
+        return deleted
+    },
+    addTodo: (parent, args, context, info) => {
+      database.todos.push(args)
+      return args
+    },
+    updateTodo: (parent, args, context, info) => {
+        return database.todos.filter((item) => {
+            return item.id === args.id
+        }).map((item) => {
+            Object.assign(item, args)
+            return item
+        })[0]
+    },
+  }
+};
+const server = new ApolloServer({ typeDefs, resolvers });
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+
+```
+위 문장을 작성후 테스트
+```js
+mutation {
+  addTodo (
+    id: 100,
+      title: "수정이요",
+      date: "2023-04-06",
+      complete: true,
+      weather: 5
+  ) {
+    id
+    title
+    date
+    complete
+    weather
+  }
+}
+
 ```
