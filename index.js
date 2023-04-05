@@ -1,8 +1,14 @@
 const database = require("./database");
+// console.log(database.todos);
+
 const { ApolloServer, gql } = require("apollo-server");
 const typeDefs = gql`
   type Query {
     todos: [Todo]
+
+    todo(id: Int): Todo
+
+    
   }
   type Todo {
     id: Int
@@ -15,6 +21,12 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     todos: () => database.todos,
+    
+    todo: (parent, args, context, info) => database.todos
+        .filter((team) => {
+            return team.id === args.id
+        })[0],
+
   },
 };
 const server = new ApolloServer({ typeDefs, resolvers });
