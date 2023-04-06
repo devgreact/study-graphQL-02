@@ -1,6 +1,6 @@
 const database = require("./database");
 // console.log(database.todos);
-
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 const { ApolloServer, gql } = require("apollo-server");
 const typeDefs = gql`
   type Query {
@@ -74,7 +74,9 @@ const resolvers = {
     },
   }
 };
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers,plugins: [
+  ApolloServerPluginLandingPageGraphQLPlayground(),
+], });
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
