@@ -1,43 +1,45 @@
 # 서버 구성요소 모듈화
+
 - 플러그인 설치
+
 ```
 npm i apollo-server-core
 ```
+
 index.js
+
 ```js
 const database = require("./database");
 // console.log(database.todos);
-const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
+const {
+  ApolloServerPluginLandingPageGraphQLPlayground,
+} = require("apollo-server-core");
 const { ApolloServer, gql } = require("apollo-server");
 const typeDefs = gql`
   type Query {
     todos: [Todo]
-    todo(id: Int): Todo    
+    todo(id: Int): Todo
   }
 
   type Mutation {
-
-    deleteTodo(id:Int): Todo
+    deleteTodo(id: Int): Todo
 
     addTodo(
-        id: Int
-        title: String
-        date: String
-        complete: Boolean
-        weather: Int
+      id: Int
+      title: String
+      date: String
+      complete: Boolean
+      weather: Int
     ): Todo
 
-    
     updateTodo(
-        id: Int
-        title: String
-        date: String
-        complete: Boolean
-        weather: Int
+      id: Int
+      title: String
+      date: String
+      complete: Boolean
+      weather: Int
     ): Todo
-
   }
-
 
   type Todo {
     id: Int
@@ -49,44 +51,45 @@ const typeDefs = gql`
 `;
 const resolvers = {
   Query: {
-    todos: () => database.todos,    
-    todo: (parent, args, context, info) => database.todos
-        .filter((team) => {
-            return team.id === args.id
-        })[0],
+    todos: () => database.todos,
+    todo: (parent, args, context, info) =>
+      database.todos.filter((team) => {
+        return team.id === args.id;
+      })[0],
   },
   Mutation: {
     deleteTodo: (parent, args, context, info) => {
-        const deleted = database.todos
-            .filter((item) => {
-                return item.id === args.id
-            })[0]
-        database.todos = database.todos
-            .filter((item) => {
-                return item.id !== args.id
-            })
-        return deleted
+      const deleted = database.todos.filter((item) => {
+        return item.id === args.id;
+      })[0];
+      database.todos = database.todos.filter((item) => {
+        return item.id !== args.id;
+      });
+      return deleted;
     },
     addTodo: (parent, args, context, info) => {
-      database.todos.push(args)
-      return args
+      database.todos.push(args);
+      return args;
     },
     updateTodo: (parent, args, context, info) => {
-        return database.todos.filter((item) => {
-            return item.id === args.id
-        }).map((item) => {
-            Object.assign(item, args)
-            return item
-        })[0]
+      return database.todos
+        .filter((item) => {
+          return item.id === args.id;
+        })
+        .map((item) => {
+          Object.assign(item, args);
+          return item;
+        })[0];
     },
-  }
+  },
 };
-const server = new ApolloServer({ typeDefs, resolvers,plugins: [
-  ApolloServerPluginLandingPageGraphQLPlayground(),
-], });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+});
 
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
-
 ```
